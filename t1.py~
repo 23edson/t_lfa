@@ -13,7 +13,55 @@ auto = defaultdict(list)
 mapGrammar = {}
 symbol  = list()
 
+def printAux2(stg):
+	if("f" in stg):
+		stg = stg[0:-1]
+	stg = stg.split(",")
+	stg = [(k.strip()) for k in stg]
+	return stg
+#def printAux(sb):
+	
+	
+#	sb = printAux2(sb)
+#	stig
+#	for i in sb:
+#		p = mapGrammar.keys()[mapGrammar.values().index(int(i))]
+#		if(p.isalpha() is not true):
+#			sr = 
+#		else:
+#			if("f" in p):
+#				p = p[0:-1]
+#			stig = stig + p 
 
+def subName(sb):
+	getName = printAux(sb)
+	sb = getName[0]			
+	if(getName[1] == 1):
+		sb = sb + "f"
+	return sb
+					
+def printAux(sb):
+	
+	sr= ''
+	final =0
+	if(sb[0].isalpha() is not True):
+		sb = printAux2(sb)
+		for i in sb:
+			p = mapGrammar.keys()[mapGrammar.values().index(int(i))]
+			if(p[0].isalpha() is not True):
+				sr = sr + printAux(p)[0] 
+			else:
+				if("f" in p):
+					p = p[0:-1]
+					final = 1
+				sr = sr + p
+		return sr,final 
+	
+	else:
+		if("f" in sb):
+			sb = sb[0:-1]
+			final = 1
+		return sb,final  
 def printAFND():
 	flag = 1
 	##print("_____|    " + "    ".join([chr(i) for i in symbol]))
@@ -33,6 +81,9 @@ def printAFND():
 		row = list(row)
 		flag = 0
 		estado = mapGrammar.keys()[mapGrammar.values().index(i)]
+		if(estado.isalpha() is not True):
+			estado = subName(estado)
+					
 		if(estado[-1] == 'f'):
 			row[flag] = "*" +estado[0:-1]
 			
@@ -57,6 +108,8 @@ def printAFND():
 				estado = estado + "   -   " 
 			else:
 				#print("    " + mapGrammar.keys()[mapGrammar.values().index(j)] + "  ")
+				if(estado.isalpha() is not True):
+					subName(estado)
 				estado = estado  + "   "+ mapGrammar.keys()[mapGrammar.values().index(j)]
 								
 				if("f" in estado):
@@ -72,6 +125,7 @@ def printAFND():
 
 def deltaAux(i,j,sname):
 	
+	global states
 	t = list(itertools.permutations(sname))
 	flagd = 0
 	for k in t:
@@ -83,6 +137,8 @@ def deltaAux(i,j,sname):
 	
 	sname = str(sname)
 	sname = sname[1:-1]
+	if sname+"f" in mapGrammar:
+		sname = sname+"f"
 	
 	
 	if(flagd == 0):
@@ -92,19 +148,21 @@ def deltaAux(i,j,sname):
 	auto[i][j] = mapGrammar[sname]
 	
 def determinize():
-	
-	for i in auto.keys():
+	kys = list(auto.keys())
+	for i in kys:
 		est = mapGrammar.keys()[mapGrammar.values().index(i)]
 		est1 = est
+		
 		if(est[0].isalpha() is not True):
+			
 			est = est.split(",")
 			est = [(k.strip()) for k in est]
-			#for (l,j) in enumerate(auto[i]):
-				for k in range(symbol):
+			for k in range(len(symbol)):
 					nv = list()
 					for  m in est:
 						test = mapGrammar.keys()[mapGrammar.values().index(int(m))]
-						if("f" in test):
+						test1 = mapGrammar.keys()[mapGrammar.values().index(i)]
+						if("f" in test and "f" not in test1):
 							copy = mapGrammar[est1]
 							mapGrammar[est1 + "f"] = copy
 							mapGrammar.pop(est1)	
@@ -117,13 +175,19 @@ def determinize():
 						deltaAux(i,k,nv)
 						
 						
+						
 		else:			
 			for (l,j) in enumerate(auto[i]):
 				if(type(j) is list):
 					deltaAux(i,l,j)
-			
+					print(str(len(auto.keys())) + " " +str(len(kys)))
+					print(auto.keys())
+					print(kys)
 						 	
-						
+		if(len(auto.keys()) > len(kys)):
+			cpy = set(auto.keys())-set(kys)
+			[kys.append(x) for x in cpy]
+			#print(kys)				
 		
 
 def ruleCopy(sbol,nterm,state):
@@ -303,4 +367,4 @@ def fileReader(name):
 			
 		
 fileReader("test.in")
-
+determinize()
