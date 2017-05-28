@@ -1,5 +1,6 @@
 from collections import defaultdict
 from terminaltables import AsciiTable
+from copy import copy
 import itertools
 
 #pip install terminaltables
@@ -11,6 +12,7 @@ states = 0
 op = 0
 auto = defaultdict(list)
 mapGrammar = {}
+removidos = {}
 symbol  = list()
 
 def printAux2(stg):
@@ -47,7 +49,10 @@ def printAux(sb):
 	if(sb[0].isalpha() is not True):
 		sb = printAux2(sb)
 		for i in sb:
-			p = mapGrammar.keys()[mapGrammar.values().index(int(i))]
+			if(int(i) in mapGrammar.values()):
+				p = mapGrammar.keys()[mapGrammar.values().index(int(i))]
+			else:
+				p = removidos.keys()[removidos.values().index(int(i))]
 			if(p[0].isalpha() is not True):
 				sr = sr + printAux(p)[0] 
 			else:
@@ -77,12 +82,16 @@ def printAFND():
 	tableAFND[0] = header
 	#tableAFND = "[[" + ','.join(header) + "],"
 	for i in auto.keys():
+		if('TEf' in mapGrammar.keys()):
+			if(i == mapGrammar['TEf']):
+				continue
 		estado = ""
 		row = list(row)
 		flag = 0
 		estado = mapGrammar.keys()[mapGrammar.values().index(i)]
-		if(estado.isalpha() is not True):
-			estado = subName(estado)
+		if(estado[0].isalpha() is not True):
+			estado =  subName(estado) 
+			
 					
 		if(estado[-1] == 'f'):
 			row[flag] = "*" +estado[0:-1]
@@ -108,9 +117,11 @@ def printAFND():
 				estado = estado + "   -   " 
 			else:
 				#print("    " + mapGrammar.keys()[mapGrammar.values().index(j)] + "  ")
-				if(estado.isalpha() is not True):
-					estado = subName(estado)
-				estado = estado  + "   "+ mapGrammar.keys()[mapGrammar.values().index(j)]
+				
+				estado = mapGrammar.keys()[mapGrammar.values().index(j)]				
+				if(estado[0].isalpha() is not True):
+					estado = subName(estado) 
+				estado = "   "+ estado
 								
 				if("f" in estado):
 					estado = estado[:-1]			
@@ -187,9 +198,65 @@ def determinize():
 		if(len(auto.keys()) > len(kys)):
 			cpy = set(auto.keys())-set(kys)
 			[kys.append(x) for x in cpy]
-			#print(kys)				
-		
+			#print(kys)
+			
+def remove_states(diff):
+	for i in diff:
+		val = mapGrammar.keys()[mapGrammar.values().index(int(i))]
+		removidos[val] = mapGrammar[val]
+		mapGrammar.pop(val)
+		auto.pop(i)			
 
+def exception(diff):
+	if('TEf' in mapGrammar):
+		if(mapGrammar['TEf'] in diff):
+			diff.pop(diff.index(mapGrammar['TEf']))
+	return diff
+def minimize():
+	new = copy(auto)
+	visitado = dfs(0,new)
+	diff = list(set(new.keys())-visitado)
+	
+	if(len(diff)>0):
+		diff = exception(diff)
+		remove_states(diff)
+	
+	vetor = []
+	for k in mapGrammar.values():
+		test = mapGrammar.keys()[mapGrammar.values().index(k)]
+		if("f" in test):
+			vetor.append(mapGrammar[test])
+			
+	for i in auto.keys():
+		if('TEf' in mapGrammar):
+			if(mapGrammar['TEf'] != i):
+				continue
+		visitado = dfs(i,new)
+		flag = 0	
+		for j in vetor:
+			if(j in list(visitado)):
+				flag = 1
+		if(flag == 0):		
+			remove_states([i])
+
+			
+def dfs(inicio,ws):
+	visitado = set()
+	pilha = [inicio]
+	
+	while pilha:
+		alf = pilha.pop()
+		if(alf not in visitado):
+			visitado.add(alf)
+			pilha.extend(set(ws[alf]) - visitado)
+			
+			if('' in pilha):
+				tnm = pilha.count('')
+				for i in range(int(tnm)):
+					pilha.pop(pilha.index(''))
+	
+	return visitado	
+	
 def ruleCopy(sbol,nterm,state):
 	idt = mapGrammar[state]
 	indx = mapGrammar[nterm]
@@ -367,4 +434,5 @@ def fileReader(name):
 			
 		
 fileReader("test.in")
+printAFND()
 determinize()
