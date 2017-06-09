@@ -1,5 +1,6 @@
-<S>::=a<S>|     a<B>|         b<S>
-<B>::=a<C>         |c<C>|c
-<C>::=b<B>|
-<D>::=c<B>|b
-
+<S>::= a<B> | a<C>|b<D>|c<C>|d<C>
+<B> ::= b<D> | c<C> | b
+<C>::= d<D>|
+<D>::=b<B>|b<C>
+if
+else
