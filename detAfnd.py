@@ -175,7 +175,12 @@ class determinizeAfnd:
 				flag = flag + 1
 			tableAFND.append(row)
 		
+		
 		table = AsciiTable(tableAFND)
+		if(self.ready == True):
+			arq2 = open("automato.txt","w")
+			arq2.write(table.table)
+			arq2.close()
 		print(table.table)
 		
 			#print(tableAFND)

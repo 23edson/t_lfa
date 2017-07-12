@@ -15,6 +15,18 @@ mapGrammar = {}
 removidos = {}
 symbol  = list()
 
+
+def fillTable():
+	mapGrammar["Xf"] = states
+	
+	
+	for i in auto.keys():
+		for j in range(len(auto[i])):
+			if auto[i][j]=='':
+				auto[i][j] = states
+	auto[states] = [states] * len(symbol)			
+	
+				
 def printAux2(stg):
 	if("f" in stg):
 		stg = stg[0:-1]
@@ -68,16 +80,17 @@ def printAux(sb):
 			final = 1
 		return sb,final  
 def printAFND():
-	flag = 1
+	flag = 2
 	##print("_____|    " + "    ".join([chr(i) for i in symbol]))
-	header = ['']*(len(symbol)+1)
-	header[0] = "  "
+	header = ['']*(len(symbol)+2)
+	header[0] = header[1] = "  "
+	
 	vet = ["  " + chr(i) + " " for i  in symbol]
 	
 	for i in vet:	
 		header[flag] = i
 		flag = flag + 1
-	row = ['']*(len(symbol)+1)
+	row = ['']*(len(symbol)+2)
 	tableAFND = ['']
 	tableAFND[0] = header
 	#tableAFND = "[[" + ','.join(header) + "],"
@@ -87,7 +100,8 @@ def printAFND():
 				continue
 		estado = ""
 		row = list(row)
-		flag = 0
+		row[0] = str(i)
+		flag = 1
 		estado = mapGrammar.keys()[mapGrammar.values().index(i)]
 		if(estado[0].isalpha() is not True):
 			estado =  subName(estado) 
@@ -97,7 +111,7 @@ def printAFND():
 			row[flag] = "*" +estado[0:-1]
 			
 		else:
-			row[flag] = estado
+			row[flag] = " " + estado
 		flag = flag + 1
 		
 		for j in auto[i]:
@@ -168,9 +182,16 @@ def determinize():
 			
 			est = est.split(",")
 			est = [(k.strip()) for k in est]
+			
+		#	[(print(k)) for k in est]
+			print("\n")
+			print("Verificando novo estado:"+str(i))
+			dados = []
 			for k in range(len(symbol)):
 					nv = list()
+					
 					for  m in est:
+						
 						test = mapGrammar.keys()[mapGrammar.values().index(int(m))]
 						test1 = mapGrammar.keys()[mapGrammar.values().index(i)]
 						if("f" in test and "f" not in test1):
@@ -181,19 +202,33 @@ def determinize():
 						if(auto[int(m)][k] != ''):
 							nv.append(auto[int(m)][k])
 					if(len(nv)==1):
-						auto[i][k] = nv[0]					
+						auto[i][k] = nv[0]
+						string1 = str(chr(symbol[k]))+":"+str(nv[0])
+						dados.append(string1)					
 					if(len(nv)>=2):
 						deltaAux(i,k,nv)
-						
+						string = [str(qr) for qr in nv]
+						string = ','.join(string)
+						print("Novo Indeterminismo:")
+						print("Estado: "+ str(i) + ", Simbolo: " + chr(symbol[k])+" / Estados envolvidos:"+ string + "/ Novo:"+str(states-1) )
+			if(len(dados)>0):		
+				print("Determinizados")
+				print("Simbolos " + ','.join(dados))
+			else:
+				print("Determinizacao:Ok")			
 						
 						
 		else:			
 			for (l,j) in enumerate(auto[i]):
 				if(type(j) is list):
 					deltaAux(i,l,j)
-					print(str(len(auto.keys())) + " " +str(len(kys)))
-					print(auto.keys())
-					print(kys)
+					string = [str(qr) for qr in j]
+					string = ','.join(string)
+					print("Indeterminismo:")
+					print("Estado: "+ str(i) + ", Simbolo: " + chr(symbol[l])+" / Estados envolvidos:"+ string + "/ Novo:"+str(states-1) )
+					#3print(str(len(auto.keys())) + " " +str(len(kys)))
+				#	print(auto.keys())
+			#		print(kys)
 						 	
 		if(len(auto.keys()) > len(kys)):
 			cpy = set(auto.keys())-set(kys)
@@ -229,7 +264,7 @@ def minimize():
 			
 	for i in auto.keys():
 		if('TEf' in mapGrammar):
-			if(mapGrammar['TEf'] != i):
+			if(mapGrammar['TEf'] == i):
 				continue
 		visitado = dfs(i,new)
 		flag = 0	
@@ -329,7 +364,7 @@ def grammarReader(rule):
 					mapGrammar[est] = states
 					auto[states] =  ['']*len(symbol)
 					states = states + 1
-				
+				print(rule[i])
 				ruleCopy(rule[i],est,init)
 			else:					
 				if(est + "f" in mapGrammar.keys()):
@@ -384,6 +419,9 @@ def countAlphabetSymbols(string,tipo):
 				sbol = getAlphaSymbol(string[i],pos1,pos2)
 				if(ord(sbol) not in symbol):
 					symbol.append(ord(sbol[0]))
+			elif(len(string[i])==1):
+				if(ord(string[i]) not in symbol):
+					symbol.append(ord(string[i]))
 	else:
 		for i in range(0,len(string)):
 			if(ord(string[i]) not in symbol):
@@ -420,12 +458,12 @@ def fileReader(name):
 		
 		if(op == 0 and getFirst == 1):
 			#countAlphabetSymbols(a,op)
-			if(ty == 0):			
-				print(auto)
-				print(mapGrammar)
+		#	if(ty == 0):			
+		#		print(auto)
+		#		print(mapGrammar)
 				
 				#print("aaa")
-			ty = ty  +1
+			#print(a)
 			grammarReader(a)
 		elif(op == 1 and getFirst == 1):
 			
@@ -434,5 +472,6 @@ def fileReader(name):
 			
 		
 fileReader("test.in")
-printAFND()
-determinize()
+#printAFND()
+#determinize()
+#fillTable()
