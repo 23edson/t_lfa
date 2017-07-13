@@ -58,13 +58,18 @@ def readFile(name):
 			estados[contador] = a[0].split(",")
 			a.remove(a[0])
 			for i in range(0,len(a)):
-				transicao[contador].append(a[i])
+				temp = ' '.join(a[i].split())
+				temp = temp.replace(" ","$")
+				transicao[contador].append(temp)
 				rowns[contador].append(numeros)
 				numeros+=1
 			#for i in range(0,len(a)):
 			contador+=1
 		elif(getFirst == 1):
-			aux = a.split(" ")
+			aux = ' '.join(a.split())
+			aux = aux.replace(" ","$")
+			#aux = a.replace(" ","$")
+			##aux = a.split(" ")
 			aux = [(i.strip()) for i in aux]
 			fita = ''.join(aux)
 			#print(fita)
@@ -98,45 +103,6 @@ def checkCond(data,atual,limit):
 		return 1
 	return 0 
 
-def dfs(pilha):
-	global transicao
-	n = pilha.topo()
-	n = getState(n[0],n[1][0],n[2][0])
-	if n == -1:
-		print("Sequencia nao reconhecida")
-		return -1
-	vis = [0]*len(transicao[n])
-	for i in range(len(transicao[n])):
-		parada = checkCond(pilha.est,rowns[n][i],5)
-		if parada==0:
-			data = pilha.topo()
-			if vis[i]==0:
-				vis[i] = 1
-				new = transicao[n][i].split(",")
-				num = rowns[n][i]
-				if(data[1][0]==data[2][0]):
-					if(data[1][0]==''):
-						print("ok")
-					else:
-						fit = data[1]
-						st = data[2]
-					
-						fit = fit[1:len(fit)]
-						st = st[1:len(st)]
-					
-						pilha.empilha([new[0],fit,st],num)
-				else:
-					st = data[2]
-					st = st[1:len(st)]
-					st = new[1]+st
-					
-					pilha = Pilha()
-					
-					pilha.empilha([new[0],data[1],st],num)
-					#print(str(new[0])+ " " +str(data[1])+ " " + str(st))
-			
-				dfs(pilha)
-				
 
 def copyStack(ex,cpy):
 	pilha = Pilha()
@@ -145,23 +111,41 @@ def copyStack(ex,cpy):
 		pilha.empilha(ex.dados[i],1)
 	pilha.empilha(cpy,1)
 	return pilha
+
+def getSymbol(fit,pilha):
+	n=fit.find("$")
+	n1=pilha.find("$")
 	
+	if(n>-1 and n1==-1):
+		return fit[0:n],pilha
+	elif(n==-1 and n1>-1):
+		return fit,pilha[0:n1]
+	elif(n>-1 and n1>-1):
+		return fit[0:n],pilha[0:n1]
+	else:
+		return fit,pilha
+			
 def bfs(fila,pos,atual,prox):
 	global transicao
 	
 	while pos<len(fila):
 		n = fila[pos].topo()
 		#print(n)
-		if(n[1]=='' and n[2]==''):
-			print(fila[pos].dados)
+		test = getSymbol(n[1],n[2])
+		if(test[0]=='' and test[1]==''):
+			copy = []
+			for i in range(len(fila[pos].dados)):
+				nx = [fila[pos].dados[i][0],fila[pos].dados[i][1].replace("$",""),fila[pos].dados[i][2].replace("$","")]
+				copy.append(nx)
+			print(copy)
 			return 1
 			#n=getState(n[0],'','')
-		elif(n[1]=='' and n[2]!=''):
-			n = getState(n[0],'',n[2][0])
-		elif(n[1]!='' and n[2]==''):
-			n = getState(n[0],n[1][0],'')
+		elif(test[0]=='' and test[1]!=''):
+			n = getState(n[0],'',test[1])
+		elif(test[0]!='' and test[1]==''):
+			n = getState(n[0],test[0],'')
 		else:
-			n = getState(n[0],n[1][0],n[2][0])
+			n = getState(n[0],test[0],test[1])
 		#if n == -1:
 		#	print("Sequencia nao reconhecida1")
 			#continue
@@ -169,18 +153,22 @@ def bfs(fila,pos,atual,prox):
 		if n>=0:
 			for i in range(len(transicao[n])):
 				data = fila[pos].topo()
-			
+				print(data)
 				new = transicao[n][i].split(",")
-				if(data[1][0]==data[2][0]):
+				print(new)
+				print(test)
+				if(test[0]==test[1]):
 					if(data[1]=='' and data[2]==''):
 						#print(fila[pos].dados)
 						return 1
 					else:
 						fit = data[1]
 						st = data[2]
-						fit = fit[1:len(fit)]
-						st = st[1:len(st)]
+						fit = fit[len(test[0])+1:len(fit)]
+						st = st[len(test[1])+1:len(st)]
 						#st = new[1]+st
+						#st = ' '.join(st.split())
+						#st = st.replace(" ","$")
 						nx = [new[0],fit,st]
 						pilha = copyStack(fila[pos],nx)
 						fila.append(pilha)
@@ -191,10 +179,13 @@ def bfs(fila,pos,atual,prox):
 					#	print("Sequencia nao reconhecida2")
 						#continue
 						#return -1
-					if((data[1][0].isupper() is not True) & (data[2][0].isupper() is not True)==False):
+					if((test[0].isupper() is not True) & (test[1].isupper() is not True)==False):
 						st = data[2]
-						st = st[1:len(st)]
+						st = st[len(test[1]):len(st)]
 						st = new[1]+st
+						if(st[0]=="$"):
+							st = st[1:len(st)]
+						#st = st.replace(" ","")
 						nx = [new[0],data[1],st]
 						pilha = copyStack(fila[pos],nx)
 						fila.append(pilha)
@@ -212,11 +203,11 @@ def execute():
 	atual = 0
 	pilha = Pilha()
 	pilha.empilha([estados[0][0],fita,estados[0][2]],0)
-	n = pilha.topo()
-	n = getState(n[0],n[1][0],n[2][0])
-	for i in range(0,len(transicao[n])):
-		atual = atual +1
-		pilha.est.append(atual)
+	#n = pilha.topo()
+	#n = getState(n[0],n[1][0],n[2][0])
+	#for i in range(0,len(transicao[n])):
+	#	atual = atual +1
+	#	pilha.est.append(atual)
 	ex.append(pilha)
 	bfs(ex,0,1,atual+1)
 	#while pilha.vazia is not True:
