@@ -1,6 +1,5 @@
-<S>::= a<B> | a<C>|b<D>|c<C>|d<C>
-<B> ::= b<D> | c<C> | b
-<C>::= d<D>|
-<D>::=b<B>|b<C>
-if
-else
+se
+entao
+senao
+<S> ::= a<A> | e<A> | i<A> | o<A> | u<A>
+<A> ::= a<A> | e<A> | i<A> | o<A> | u<A> |

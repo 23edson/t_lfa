@@ -20,7 +20,7 @@ import itertools
 * 	Universidade Federal da Fronteira Sul
 *
 * 	TRABALHO I
-*	Disciplina: Linguagens formais e automatos
+*	Disciplina: Linguagens formais e automâtos
 *  Professor: Braulio Adriano de Mello
 *
 *  Aluno: Edson Lemes da Silva
