@@ -1,4 +1,28 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+''' 
+* 	Universidade Federal da Fronteira Sul
+*
+* 	TRABALHO II
+*	Disciplina: Linguagens formais e automâtos
+*  Professor: Braulio Adriano de Mello
+*
+*  Aluno: Edson Lemes da Silva
+*
+*
+*	A aplicação consiste em ler um arquivo de 
+*  entrada contendo um conjunto de transições
+*  para um APND, juntamente com uma sequência de
+*  símbolos para ser analisado. O reconhecimento
+*  da sequência é feita por Pilha vazia.
+*
+*	No final, caso for acontecer o reconhecimento,
+*  exibe-se a execução no autômato de pilha que 
+*  levou ao estado de aceitação. Caso contrário,
+*  é imprimido uma mensagem de rejeição.
+*
+'''
 class Pilha(object):
     def __init__(self):
         self.dados = []
@@ -20,20 +44,42 @@ class Pilha(object):
         
 class Ap:
 	
-	def __init__(self,name):
+	def __init__(self,name,debug=False):
+		#lista de estados de transicao
 		self.estados = []
-		self.transicao = []
-		self.fita = ''
-		self.fila = []
-		self.contador = 0
-		self.readFile(name)
 		
+		#lista de transicao para cada estado
+		self.transicao = []
+		
+		#conteudo da fita
+		self.fita = ''
+		
+		#lista de fila
+		self.fila = []
+		
+		#contador de transicoes
+		self.contador = 0
+		
+		#Le o arquivo 
+		self.readFile(name)
+		self.debug = debug
+	
+	#Imprime um elemento da fila na posicao passada por parametro
+	def printData(self,pos):
+		data = []
+		for i in range(0,len(self.fila[pos].dados)):
+			nx =  [self.fila[pos].dados[i][0],self.fila[pos].dados[i][1].replace("$",""),self.fila[pos].dados[i][2].replace("$","")]
+			data.append(nx)
+		print(data)
+	#Le o arquivo de entrada
+	#@para: name: nome do arquivo a ser lido	
 	def readFile(self,name):
 		arq = open(name,"r")
 		if(arq == None):return None
 		getFirst = 0
 		
 		while True:
+			#Le linha por linha
 			a = arq.readline()
 		
 			if(len(a)==0 or len(a)==1):
@@ -48,14 +94,19 @@ class Ap:
 					numeros = 0
 					continue
 				else: break
-		
+			
+		   #Verifica se esta no formato correto
 			if("::=" in a and getFirst==1):
 				a = a.replace("::=", "|")
 				a = a.split("|")
 				a = [(i.strip()) for i in a]
 			
+				#Acrescenta o estado na lista				
 				self.estados[cont] = a[0].split(",")
 				a.remove(a[0])
+				
+				#Substitui os espacos em branco por '$' e coloca na lista
+				#de transicao
 				for i in range(0,len(a)):
 					temp = ' '.join(a[i].split())
 					temp = temp.replace(" ","$")
@@ -65,17 +116,24 @@ class Ap:
 				#for i in range(0,len(a)):
 				cont+=1
 			elif(getFirst == 1):
+				
+				#coloca na fita os elementos lido e substitui
+				#espacos vazios por '$'
 				aux = ' '.join(a.split())
 				aux = aux.replace(" ","$")
-				#aux = a.replace(" ","$")
-				##aux = a.split(" ")
+				
 				aux = [(i.strip()) for i in aux]
 				self.fita = ''.join(aux)
 				#print(fita)
 			elif(getFirst == 0):
+				#Conta o numero de transicao
 				self.contador+=1
 				
 			
+	#Procura nos estados da pilha aquele que melhor atende ao topo da pilha
+	#@param: nro : numero do estado
+	#@param: topo : simbolo no topo da fita
+	#@param: state: simbolo no topo da pilha		
 	def getState(self,nro,topo,state):
 		#global estados
 	
@@ -92,6 +150,7 @@ class Ap:
 		return -1
 
 
+   #Copia todos os elementos de uma pilha
 	def copyStack(self,ex,cpy):
 		pilha = Pilha()
 	
@@ -100,6 +159,11 @@ class Ap:
 		pilha.empilha(cpy)
 		return pilha
 
+
+	
+      	   	
+   #Verifica cada simbolo ou estado
+   #@param: fit : conteudo da fita, pilha: conteudo da pilha
 	def getSymbol(self,fit,pilha):
 		n=fit.find("$")
 		n1=pilha.find("$")
@@ -112,22 +176,28 @@ class Ap:
 			return fit[0:n],pilha[0:n1]
 		else:
 			return fit,pilha
-			
+	
+	#Algoritmo busca em largura
+	#@param: pos: posicao inicial da fila, limit: limite de busca		
 	def bfs(self,pos,limit):
 		#global transicao
 	
 		while pos<len(self.fila):
 			if(pos > limit):break
 			
+         #Elemento do topo da pilha para estado que esta na fila			
 			n = self.fila[pos].topo()
 			
 			test = self.getSymbol(n[1],n[2])
+			#Imprime o elemento no topo da pilha
+			if(self.debug==True):
+				self.printData(pos)
+			
+			#Testa se condicao de pilha vazia eh aceita
 			if(test[0]=='' and test[1]==''):
-				copy = []
-				for i in range(len(self.fila[pos].dados)):
-					nx = [self.fila[pos].dados[i][0],self.fila[pos].dados[i][1].replace("$",""),self.fila[pos].dados[i][2].replace("$","")]
-					copy.append(nx)
-				print(copy)
+				print("Sequencia reconhecida:")
+				
+				self.printData(pos)
 				return 1
 				
 			elif(test[0]=='' and test[1]!=''):
@@ -136,13 +206,17 @@ class Ap:
 				n = self.getState(n[0],test[0],'')
 			else:
 				n = self.getState(n[0],test[0],test[1])
-				
+			
+			#se for um estado valido	
 			if n>=0:
+				#Acrescenta na fila uma instancia para todas as 
+				#transicoes do estado sendo estado
 				for i in range(len(self.transicao[n])):
 					data = self.fila[pos].topo()
 					
 					new = self.transicao[n][i].split(",")
 					
+					#se o topo da fita e pilha sao iguais, remove-os
 					if(test[0]==test[1]):
 						if(data[1]=='' and data[2]==''):
 							#print(fila[pos].dados)
@@ -152,39 +226,37 @@ class Ap:
 							st = data[2]
 							fit = fit[len(test[0])+1:len(fit)]
 							st = st[len(test[1])+1:len(st)]
-							#st = new[1]+st
-							#st = ' '.join(st.split())
-							#st = st.replace(" ","$")
+							
 							nx = [new[0],fit,st]
 							pilha = self.copyStack(self.fila[pos],nx)
 							self.fila.append(pilha)
-							#atual+=1
+							
 					else:
-						#if((data[1][0].isupper() is not True) & (data[2][0].isupper() is not True)):
-						#print(str(data[1][0])+" " + str(data[2][0]))					
-						#	print("Sequencia nao reconhecida2")
-						#continue
-						#return -1
+						#Caso contrario acrescenta no topo da pilha sem remover nada
+						# da fita
 						if((test[0].isupper() is not True) & (test[1].isupper() is not True)==False):
 							st = data[2]
 							st = st[len(test[1]):len(st)]
 							st = new[1]+st
 							if(st[0]=="$"):
 								st = st[1:len(st)]
-							#st = st.replace(" ","")
+							
 							nx = [new[0],data[1],st]
 							pilha = self.copyStack(self.fila[pos],nx)
 							self.fila.append(pilha)
-							#atual+=1
+				
 			pos+=1
 		
 		return 0							
 	
+	#Funcao principal que executa a verificacao
+	#@param: limit : condicao secundaria de parada
 	def execute(self,limit):
 	
 		pilha = Pilha()
 		pilha.empilha([self.estados[0][0],self.fita,self.estados[0][2]])
 	
+	   #inicializa a fila com o primeiro elemento
 		self.fila.append(pilha)
 		if(self.bfs(0,limit)==0):
 			print("Sequencia nao reconhecida")
